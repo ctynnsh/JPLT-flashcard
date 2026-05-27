@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JLPT 单词卡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--card:#fff;--text:#1a1a1a;--muted:#6b6b6b;--faint:#aaa;--accent:#5b4fcf;--accent-l:#ede9ff;--accent-d:#3d35a0;--green:#2d7a4f;--green-l:#e8f5ee;--red:#c0392b;--red-l:#fdecea;--amber:#b5621e;--amber-l:#fef3e6;--border:rgba(0,0,0,.08);--border-s:rgba(0,0,0,.15);--r:16px;--rs:10px;--sh:0 2px 12px rgba(0,0,0,.07);--shc:0 4px 24px rgba(0,0,0,.10)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:1.5rem 1rem 3rem}
+#app{width:100%;max-width:420px}
+.screen{display:none;flex-direction:column;gap:1.2rem;animation:fi .25s ease}
+.screen.active{display:flex}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{text-align:center;padding:1rem 0 .5rem}
+.login-logo-jp{font-family:'Noto Serif JP',serif;font-size:13px;color:var(--faint);letter-spacing:.1em;margin-bottom:.4rem}
+.login-logo-title{font-size:28px;font-weight:700;color:var(--accent)}
+.login-card{background:var(--card);border-radius:var(--r);padding:1.5rem;border:1px solid var(--border);box-shadow:var(--sh)}
+.login-label{font-size:12px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.login-input{width:100%;padding:13px 14px;border-radius:var(--rs);border:1.5px solid var(--border-s);font-size:16px;font-family:'Noto Sans JP',sans-serif;background:var(--card);color:var(--text);outline:none;transition:border-color .15s}
+.login-input:focus{border-color:var(--accent)}
+.user-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.user-chip{padding:9px 14px;border-radius:var(--rs);border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:13px;color:var(--text);display:flex;align-items:center;justify-content:space-between;transition:all .15s}
+.user-chip:hover{border-color:var(--accent);background:var(--accent-l);color:var(--accent-d)}
+.user-chip-info{font-size:11px;color:var(--faint)}
+.user-chip:hover .user-chip-info{color:var(--accent)}
+.topbar{display:flex;align-items:center;gap:10px;padding-bottom:.25rem}
+.topbar-title{font-family:'Noto Serif JP',serif;font-size:15px;font-weight:600;letter-spacing:.03em}
+.topbar-back{width:34px;height:34px;border-radius:50%;border:1px solid var(--border-s);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px;color:var(--muted);transition:background .15s}
+.topbar-back:hover{background:var(--accent-l);color:var(--accent)}
+.prog-track{flex:1;height:5px;background:var(--border);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .4s ease}
+.prog-lbl{font-size:12px;color:var(--faint);white-space:nowrap;min-width:36px;text-align:right}
+.hero{background:var(--accent);border-radius:var(--r);padding:1.75rem 1.5rem;color:#fff}
+.hero-user{font-size:12px;opacity:.7;margin-bottom:.3rem;letter-spacing:.05em}
+.hero-title{font-size:22px;font-weight:700;line-height:1.25;margin-bottom:.4rem}
+.hero-sub{font-size:13px;opacity:.75;line-height:1.5}
+.streak-banner{background:var(--card);border-radius:var(--rs);padding:.9rem 1rem;border:1px solid var(--border);box-shadow:var(--sh);display:flex;align-items:center;gap:12px}
+.streak-fire{font-size:28px;flex-shrink:0}
+.streak-day{font-size:20px;font-weight:700;color:var(--accent)}
+.streak-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.streak-cal{margin-left:auto;display:flex;gap:4px}
+.cal-dot{width:10px;height:10px;border-radius:50%;background:var(--border)}
+.cal-dot.done{background:var(--accent)}
+.cal-dot.today-dot{background:var(--accent);box-shadow:0 0 0 2px var(--accent-l)}
+.sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin-bottom:8px}
+.hist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hist-card{background:var(--card);border-radius:var(--rs);padding:.75rem;text-align:center;border:1px solid var(--border)}
+.hist-num{font-size:20px;font-weight:700;color:var(--accent)}
+.hist-lbl{font-size:11px;color:var(--faint);margin-top:2px}
+.lv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.lv-btn{padding:16px 8px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .15s;box-shadow:var(--sh)}
+.lv-btn:hover{border-color:var(--accent)}
+.lv-btn .lv{font-size:22px;font-weight:700;display:block;color:var(--text)}
+.lv-btn .lv-s{font-size:11px;color:var(--faint);margin-top:3px}
+.lv-btn.active{border-color:var(--accent);background:var(--accent-l)}
+.lv-btn.active .lv{color:var(--accent-d)}
+.lv-btn.active .lv-s{color:var(--accent)}
+.count-row{display:flex;align-items:center;gap:12px}
+.count-row input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:99px;background:var(--border-s);outline:none}
+.count-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 1px 4px rgba(91,79,207,.4)}
+.cnt-l{font-size:12px;color:var(--faint)}
+.cnt-v{font-size:18px;font-weight:700;color:var(--accent);min-width:28px}
+.user-header{display:flex;align-items:center;justify-content:space-between}
+.user-tag{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-l);color:var(--accent-d);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.logout-btn{font-size:12px;color:var(--faint);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px}
+.logout-btn:hover{color:var(--red);background:var(--red-l)}
+.btn{width:100%;padding:15px;border-radius:var(--rs);border:none;font-size:15px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.03em}
+.btn:active{transform:scale(.98)}
+.btn-p{background:var(--accent);color:#fff}
+.btn-p:hover{opacity:.92}
+.btn-p:disabled{opacity:.35;cursor:not-allowed}
+.btn-g{background:var(--card);color:var(--text);border:1px solid var(--border-s)}
+.btn-g:hover{background:var(--bg)}
+.card-stage{position:relative;height:400px;display:flex;align-items:center;justify-content:center}
+.flashcard{position:absolute;width:100%;background:var(--card);border-radius:22px;padding:1.75rem 1.6rem 1.5rem;box-shadow:var(--shc);cursor:grab;user-select:none;touch-action:none;border:1px solid var(--border);will-change:transform}
+.flashcard:active{cursor:grabbing}
+.fc-ov{position:absolute;inset:0;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;pointer-events:none;opacity:0;letter-spacing:.05em}
+.fc-ov-l{background:rgba(192,57,43,.1);color:var(--red)}
+.fc-ov-r{background:rgba(45,122,79,.1);color:var(--green)}
+.fc-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--accent-l);color:var(--accent-d);margin-bottom:1rem;letter-spacing:.05em}
+.fc-word{font-family:'Noto Serif JP',serif;font-size:42px;font-weight:600;color:var(--text);line-height:1.15;margin-bottom:6px}
+.fc-reading{font-size:16px;color:var(--muted);margin-bottom:.9rem}
+.fc-snd{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--border-s);border-radius:99px;padding:5px 13px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:.9rem;font-family:'Noto Sans JP',sans-serif;transition:all .15s}
+.fc-snd:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent)}
+.fc-div{height:1px;background:var(--border);margin:0 0 .9rem}
+.fc-pos{font-size:11px;color:var(--faint);margin-bottom:4px;letter-spacing:.03em}
+.fc-meaning{font-size:17px;font-weight:700;margin-bottom:8px}
+.fc-ex{font-size:13px;color:var(--muted);line-height:1.65}
+.fc-ex-cn{font-size:12px;color:var(--faint);margin-top:4px;line-height:1.55}
+.hints{display:flex;justify-content:space-between;padding:0 12px}
+.hint{font-size:12px;color:var(--faint)}
+.res-hero{background:var(--card);border-radius:var(--r);padding:1.5rem;text-align:center;box-shadow:var(--sh);border:1px solid var(--border)}
+.res-emoji{font-size:44px;margin-bottom:.5rem}
+.res-title{font-family:'Noto Serif JP',serif;font-size:20px;font-weight:600;margin-bottom:4px}
+.res-sub{font-size:13px;color:var(--muted)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:var(--card);border-radius:var(--rs);padding:1rem;text-align:center;border:1px solid var(--border);box-shadow:var(--sh)}
+.stat-n{font-size:28px;font-weight:700}
+.stat-l{font-size:12px;color:var(--faint);margin-top:3px}
+.qbadge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:.05em}
+.qb-mc{background:var(--green-l);color:var(--green)}
+.qb-match{background:var(--accent-l);color:var(--accent-d)}
+.qb-fill{background:var(--amber-l);color:var(--amber)}
+.quiz-q{background:var(--card);border-radius:var(--rs);padding:.9rem 1rem;font-size:14px;color:var(--muted);line-height:1.6;border:1px solid var(--border)}
+.quiz-word{font-family:'Noto Serif JP',serif;font-size:34px;font-weight:600;text-align:center;padding:.6rem 0 .2rem;color:var(--text)}
+.mc-opts{display:flex;flex-direction:column;gap:9px}
+.mc-opt{padding:13px 16px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:14px;font-family:'Noto Sans JP',sans-serif;color:var(--text);text-align:left;transition:all .15s;line-height:1.4}
+.mc-opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-l)}
+.mc-opt.correct{border-color:var(--green);background:var(--green-l);color:var(--green);font-weight:700}
+.mc-opt.wrong{border-color:var(--red);background:var(--red-l);color:var(--red)}
+.mc-opt.reveal{border-color:var(--green);background:var(--green-l);color:var(--green);font-weight:700}
+.mc-opt:disabled{cursor:default}
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match-col{display:flex;flex-direction:column;gap:8px}
+.match-col-lbl{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.match-item{padding:11px 12px;border-radius:var(--rs);border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:13px;text-align:center;min-height:50px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;transition:all .15s;line-height:1.35}
+.match-item:hover:not(.matched-ok):not(.dimmed){border-color:var(--accent);background:var(--accent-l)}
+.match-item.selected{border-color:var(--accent);background:var(--accent-l);color:var(--accent-d);font-weight:700}
+.match-item.matched-ok{border-color:var(--green);background:var(--green-l);color:var(--green);cursor:default;font-weight:700}
+.match-item.matched-err{border-color:var(--red);background:var(--red-l);color:var(--red)}
+.match-item.dimmed{opacity:.3;cursor:default}
+.match-r{font-size:10px;color:var(--faint);font-weight:400}
+.match-item.selected .match-r,.match-item.matched-ok .match-r{color:inherit;opacity:.7}
+.fill-row{display:flex;gap:8px}
+.fill-row input{flex:1;padding:12px 14px;border-radius:var(--rs);border:1.5px solid var(--border-s);font-size:16px;font-family:'Noto Sans JP',sans-serif;background:var(--card);color:var(--text);outline:none;transition:border-color .15s}
+.fill-row input:focus{border-color:var(--accent)}
+.fill-sub{padding:0 18px;border-radius:var(--rs);border:1.5px solid var(--border-s);background:var(--card);font-size:14px;font-family:'Noto Sans JP',sans-serif;cursor:pointer;color:var(--text);transition:all .15s;white-space:nowrap}
+.fill-sub:hover{background:var(--accent-l);border-color:var(--accent);color:var(--accent)}
+.fill-fb{font-size:13px;padding:9px 13px;border-radius:var(--rs);line-height:1.55;margin-top:2px}
+.fill-fb.ok{background:var(--green-l);color:var(--green);font-weight:700}
+.fill-fb.err{background:var(--red-l);color:var(--red)}
+.quiz-next{display:none;padding:12px 22px;border-radius:var(--rs);background:var(--accent);color:#fff;border:none;font-size:14px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;align-self:flex-end;transition:opacity .15s}
+.quiz-next.show{display:block}
+.quiz-next:hover{opacity:.9}
+.score-wrap{display:flex;justify-content:center}
+.score-ring{width:110px;height:110px}
+.final-title{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:600;text-align:center}
+.final-sub{font-size:14px;color:var(--muted);text-align:center;line-height:1.6}
+.footer{text-align:center;font-size:11px;color:var(--faint);padding-top:.5rem}
+@media(max-width:380px){.fc-word{font-size:34px}.card-stage{height:380px}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-logo">
+    <div class="login-logo-jp">日本語能力試験</div>
+    <div class="login-logo-title">JLPT 単語カード</div>
+  </div>
+  <div class="login-card">
+    <div class="login-label">输入你的名字开始学习</div>
+    <input class="login-input" id="login-input" type="text" placeholder="例：小明" maxlength="20" autocomplete="off">
+    <div id="user-list-wrap" style="margin-top:12px;display:none">
+      <div style="font-size:12px;color:var(--faint);margin-bottom:6px">历史用户</div>
+      <div class="user-list" id="user-list"></div>
+    </div>
+  </div>
+  <button class="btn btn-p" id="login-btn" onclick="doLogin()" disabled>开始 →</button>
+  <div class="footer">进度保存在本地浏览器，朋友之间数据各自独立</div>
+</div>
+
+<!-- SETUP -->
+<div id="s-setup" class="screen">
+  <div class="user-header">
+    <div class="user-tag">
+      <div class="user-avatar" id="setup-avatar"></div>
+      <span id="setup-uname"></span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">切换用户</button>
+  </div>
+  <div class="hero">
+    <div class="hero-user" id="hero-user-line"></div>
+    <div class="hero-title" id="hero-title"></div>
+    <div class="hero-sub" id="hero-sub"></div>
+  </div>
+  <div class="streak-banner">
+    <div class="streak-fire" id="streak-fire"></div>
+    <div>
+      <div class="streak-day" id="streak-day"></div>
+      <div class="streak-sub" id="streak-sub-txt"></div>
+    </div>
+    <div class="streak-cal" id="streak-cal"></div>
+  </div>
+  <div class="hist-grid">
+    <div class="hist-card"><div class="hist-num" id="h-days">0</div><div class="hist-lbl">累计天数</div></div>
+    <div class="hist-card"><div class="hist-num" id="h-words">0</div><div class="hist-lbl">累计词汇</div></div>
+    <div class="hist-card"><div class="hist-num" id="h-streak">0</div><div class="hist-lbl">连续天数</div></div>
+  </div>
+  <div>
+    <div class="sec-lbl">选择级别</div>
+    <div class="lv-grid">
+      <button class="lv-btn" onclick="selLv('N3')" id="btn-N3"><span class="lv">N3</span><span class="lv-s">中级·3750词</span></button>
+      <button class="lv-btn" onclick="selLv('N2')" id="btn-N2"><span class="lv">N2</span><span class="lv-s">上级·6000词</span></button>
+      <button class="lv-btn" onclick="selLv('N1')" id="btn-N1"><span class="lv">N1</span><span class="lv-s">高级·10000词</span></button>
+    </div>
+  </div>
+  <div>
+    <div class="sec-lbl">每天背 <span id="cnt-disp">20</span> 个</div>
+    <div class="count-row">
+      <span class="cnt-l">5</span>
+      <input type="range" min="5" max="50" step="5" value="20" oninput="updCnt(this.value)">
+      <span class="cnt-v" id="cnt-v">20</span>
+    </div>
+  </div>
+  <button class="btn btn-p" id="start-btn" onclick="startStudy()" disabled>选择级别后开始 →</button>
+  <div class="footer">右滑 = 记住了 · 左滑 = 没记住 · 完成后自动测验</div>
+</div>
+
+<!-- STUDY -->
+<div id="s-study" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goSetup()" aria-label="返回">←</button>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="prog-lbl" id="prog-lbl">0/0</div>
+  </div>
+  <div class="card-stage">
+    <div class="flashcard" id="flashcard">
+      <div class="fc-ov fc-ov-l" id="ov-l">✕ 没记住</div>
+      <div class="fc-ov fc-ov-r" id="ov-r">✓ 记住了</div>
+      <div id="fc-body"></div>
+    </div>
+  </div>
+  <div class="hints"><div class="hint">← 没记住</div><div class="hint">记住了 →</div></div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="res-hero">
+    <div class="res-emoji">🎉</div>
+    <div class="res-title">今日学习完成！</div>
+    <div class="res-sub" id="res-sub"></div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-n" id="r-total">0</div><div class="stat-l">总共学习</div></div>
+    <div class="stat-card"><div class="stat-n" style="color:var(--green)" id="r-known">0</div><div class="stat-l">已记住</div></div>
+    <div class="stat-card"><div class="stat-n" style="color:var(--red)" id="r-review">0</div><div class="stat-l">需复习</div></div>
+    <div class="stat-card"><div class="stat-n" style="color:var(--accent)" id="r-rate">0%</div><div class="stat-l">记忆率</div></div>
+  </div>
+  <button class="btn btn-p" onclick="startQuiz()">开始测验 →</button>
+  <button class="btn btn-g" id="review-btn" onclick="doReview()">复习未记住的词</button>
+  <button class="btn btn-g" onclick="goSetup()">返回主页</button>
+</div>
+
+<!-- QUIZ -->
+<div id="s-quiz" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goSetup()" aria-label="返回">←</button>
+    <span class="topbar-title">测验</span>
+    <span id="q-badge" class="qbadge qb-mc" style="margin-left:4px">选择题</span>
+    <div style="margin-left:auto;font-size:12px;color:var(--faint)" id="q-prog">1/10</div>
+  </div>
+  <div id="quiz-body"></div>
+  <button class="quiz-next" id="quiz-next" onclick="nextQ()">下一题 →</button>
+</div>
+
+<!-- FINAL -->
+<div id="s-final" class="screen">
+  <div style="text-align:center;font-size:40px;padding:.5rem 0" id="final-icon">🏆</div>
+  <div class="final-title" id="final-title"></div>
+  <div class="final-sub" id="final-sub"></div>
+  <div class="score-wrap">
+    <svg class="score-ring" viewBox="0 0 110 110">
+      <circle cx="55" cy="55" r="46" fill="none" stroke="#e8e8e8" stroke-width="9"/>
+      <circle id="score-arc" cx="55" cy="55" r="46" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="289" transform="rotate(-90 55 55)" style="transition:stroke-dashoffset 1s ease,stroke .5s ease"/>
+      <text x="55" y="60" text-anchor="middle" font-size="20" font-weight="700" font-family="'Noto Sans JP',sans-serif" fill="var(--text)" id="score-pct-txt">0%</text>
+    </svg>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-n" style="color:var(--green)" id="f-ok">0</div><div class="stat-l">答对</div></div>
+    <div class="stat-card"><div class="stat-n" style="color:var(--red)" id="f-fail">0</div><div class="stat-l">答错</div></div>
+  </div>
+  <button class="btn btn-p" onclick="startQuiz()">再来一次 →</button>
+  <button class="btn btn-g" onclick="goSetup()">返回主页</button>
+</div>
+
+</div>
+<script>
+const VOCAB={N3:[{word:'経験',reading:'けいけん',pos:'名词',meaning:'经验，经历',example:'彼女は豊富な経験を持っている。',exCn:'她拥有丰富的经验。'},{word:'確認',reading:'かくにん',pos:'名词/动词',meaning:'确认，核实',example:'もう一度確認してください。',exCn:'请再确认一次。'},{word:'状況',reading:'じょうきょう',pos:'名词',meaning:'状况，情况',example:'状況が変わりました。',exCn:'情况变了。'},{word:'関係',reading:'かんけい',pos:'名词',meaning:'关系，关联',example:'二人の関係は良好だ。',exCn:'两人关系良好。'},{word:'必要',reading:'ひつよう',pos:'名词/形容词',meaning:'必要，需要',example:'休息が必要だと思います。',exCn:'我认为需要休息。'},{word:'変化',reading:'へんか',pos:'名词/动词',meaning:'变化',example:'天気の変化が激しい。',exCn:'天气变化剧烈。'},{word:'影響',reading:'えいきょう',pos:'名词/动词',meaning:'影响',example:'気候変動が農業に影響する。',exCn:'气候变化影响农业。'},{word:'目的',reading:'もくてき',pos:'名词',meaning:'目的，目标',example:'旅行の目的は観光です。',exCn:'旅行的目的是观光。'},{word:'判断',reading:'はんだん',pos:'名词/动词',meaning:'判断，判定',example:'自分で判断してください。',exCn:'请自己判断。'},{word:'解決',reading:'かいけつ',pos:'名词/动词',meaning:'解决',example:'問題を早く解決したい。',exCn:'想早点解决问题。'},{word:'準備',reading:'じゅんび',pos:'名词/动词',meaning:'准备',example:'試験の準備をしている。',exCn:'正在准备考试。'},{word:'注意',reading:'ちゅうい',pos:'名词/动词',meaning:'注意，警告',example:'車に注意してください。',exCn:'请注意汽车。'},{word:'商品',reading:'しょうひん',pos:'名词',meaning:'商品，产品',example:'新しい商品を発売した。',exCn:'发售了新商品。'},{word:'空気',reading:'くうき',pos:'名词',meaning:'空气，气氛',example:'山の空気はきれいだ。',exCn:'山里的空气很清新。'},{word:'喜ぶ',reading:'よろこぶ',pos:'动词',meaning:'高兴，喜悦',example:'プレゼントをもらって喜んだ。',exCn:'收到礼物很高兴。'},{word:'困る',reading:'こまる',pos:'动词',meaning:'困扰，为难',example:'道に迷って困った。',exCn:'迷路了，很为难。'},{word:'覚える',reading:'おぼえる',pos:'动词',meaning:'记住，学会',example:'単語を覚えるのは大変だ。',exCn:'记单词很辛苦。'},{word:'正確',reading:'せいかく',pos:'形容词',meaning:'正确，精确',example:'正確な情報が必要だ。',exCn:'需要正确的信息。'},{word:'複雑',reading:'ふくざつ',pos:'形容词',meaning:'复杂',example:'この問題は複雑だ。',exCn:'这个问题很复杂。'},{word:'重要',reading:'じゅうよう',pos:'形容词',meaning:'重要',example:'健康は重要だと思う。',exCn:'我认为健康很重要。'},{word:'表現',reading:'ひょうげん',pos:'名词/动词',meaning:'表现，表达',example:'気持ちを言葉で表現する。',exCn:'用语言表达心情。'},{word:'材料',reading:'ざいりょう',pos:'名词',meaning:'材料，原料',example:'料理の材料を買いに行く。',exCn:'去买做菜的材料。'},{word:'対象',reading:'たいしょう',pos:'名词',meaning:'对象，目标',example:'調査の対象は20代です。',exCn:'调查对象是20多岁的人。'},{word:'丁寧',reading:'ていねい',pos:'形容词',meaning:'礼貌，细心',example:'丁寧に説明してくれた。',exCn:'耐心地给我解释了。'},{word:'自然',reading:'しぜん',pos:'名词/形容词',meaning:'自然，大自然',example:'自然の中で休みたい。',exCn:'想在大自然中休息。'},{word:'残る',reading:'のこる',pos:'动词',meaning:'剩余，留下',example:'仕事がたくさん残っている。',exCn:'还剩很多工作。'},{word:'集める',reading:'あつめる',pos:'动词',meaning:'收集，聚集',example:'切手を集めるのが趣味だ。',exCn:'收集邮票是我的爱好。'},{word:'送る',reading:'おくる',pos:'动词',meaning:'送，寄送',example:'荷物を友人に送った。',exCn:'把行李寄给了朋友。'},{word:'決める',reading:'きめる',pos:'动词',meaning:'决定，确定',example:'場所を決めた。',exCn:'决定了地点。'},{word:'比較',reading:'ひかく',pos:'名词/动词',meaning:'比较',example:'二つの商品を比較した。',exCn:'比较了两种商品。'}],N2:[{word:'概念',reading:'がいねん',pos:'名词',meaning:'概念',example:'新しい概念を理解するのは難しい。',exCn:'理解新概念很难。'},{word:'議論',reading:'ぎろん',pos:'名词/动词',meaning:'议论，讨论',example:'会議で議論が続いた。',exCn:'会议上讨论持续进行。'},{word:'効果',reading:'こうか',pos:'名词',meaning:'效果，效力',example:'薬の効果が出てきた。',exCn:'药效开始显现了。'},{word:'根拠',reading:'こんきょ',pos:'名词',meaning:'根据，依据',example:'主張の根拠を示してください。',exCn:'请说明主张的根据。'},{word:'実施',reading:'じっし',pos:'名词/动词',meaning:'实施，执行',example:'計画を実施に移した。',exCn:'将计划付诸实施。'},{word:'収入',reading:'しゅうにゅう',pos:'名词',meaning:'收入，收益',example:'収入が増えた。',exCn:'收入增加了。'},{word:'主張',reading:'しゅちょう',pos:'名词/动词',meaning:'主张，坚持',example:'自分の意見を主張する。',exCn:'主张自己的意见。'},{word:'対応',reading:'たいおう',pos:'名词/动词',meaning:'对应，应对',example:'問題に迅速に対応した。',exCn:'迅速应对了问题。'},{word:'統計',reading:'とうけい',pos:'名词',meaning:'统计',example:'統計によると人口が増えている。',exCn:'据统计人口在增加。'},{word:'把握',reading:'はあく',pos:'名词/动词',meaning:'掌握，把握',example:'状況を正確に把握する。',exCn:'准确掌握情况。'},{word:'批判',reading:'ひはん',pos:'名词/动词',meaning:'批判，批评',example:'政策に対する批判が多い。',exCn:'对政策的批判很多。'},{word:'普及',reading:'ふきゅう',pos:'名词/动词',meaning:'普及，推广',example:'スマートフォンが普及した。',exCn:'智能手机得到了普及。'},{word:'明確',reading:'めいかく',pos:'形容词',meaning:'明确',example:'明確な返事をください。',exCn:'请给出明确的回答。'},{word:'余裕',reading:'よゆう',pos:'名词',meaning:'余裕，宽裕',example:'時間に余裕がある。',exCn:'时间上有余裕。'},{word:'様々',reading:'さまざま',pos:'形容词',meaning:'各种各样',example:'様々な問題がある。',exCn:'存在各种各样的问题。'},{word:'維持',reading:'いじ',pos:'名词/动词',meaning:'维持，保持',example:'健康を維持するために運動する。',exCn:'为了维持健康而运动。'},{word:'意識',reading:'いしき',pos:'名词/动词',meaning:'意识，意识到',example:'問題点を意識している。',exCn:'意识到了问题所在。'},{word:'応用',reading:'おうよう',pos:'名词/动词',meaning:'应用，运用',example:'理論を実践に応用する。',exCn:'将理论应用于实践。'},{word:'依存',reading:'いぞん',pos:'名词/动词',meaning:'依赖，依存',example:'薬への依存が問題だ。',exCn:'对药物的依赖是个问题。'},{word:'一致',reading:'いっち',pos:'名词/动词',meaning:'一致',example:'二人の意見が一致した。',exCn:'两人的意见一致了。'},{word:'観察',reading:'かんさつ',pos:'名词/动词',meaning:'观察',example:'自然を観察するのが好きだ。',exCn:'喜欢观察自然。'},{word:'構造',reading:'こうぞう',pos:'名词',meaning:'构造，结构',example:'建物の構造を調べた。',exCn:'调查了建筑物的结构。'},{word:'姿勢',reading:'しせい',pos:'名词',meaning:'姿势，态度',example:'正しい姿勢で座ろう。',exCn:'用正确的姿势坐着吧。'},{word:'展開',reading:'てんかい',pos:'名词/动词',meaning:'展开，发展',example:'話が新たな展開を見せた。',exCn:'故事出现了新的发展。'},{word:'論理',reading:'ろんり',pos:'名词',meaning:'逻辑',example:'論理的に考える習慣をつけよう。',exCn:'养成逻辑思考的习惯吧。'},{word:'象徴',reading:'しょうちょう',pos:'名词/动词',meaning:'象征',example:'白い鳩は平和の象徴だ。',exCn:'白鸽是和平的象征。'},{word:'促進',reading:'そくしん',pos:'名词/动词',meaning:'促进',example:'経済成長を促進する政策。',exCn:'促进经济增长的政策。'},{word:'模索',reading:'もさく',pos:'名词/动词',meaning:'摸索，探索',example:'解決策を模索している。',exCn:'正在摸索解决方案。'},{word:'容易',reading:'ようい',pos:'形容词',meaning:'容易，简单',example:'それは容易なことではない。',exCn:'那不是容易的事。'},{word:'抽象',reading:'ちゅうしょう',pos:'名词/形容词',meaning:'抽象',example:'抽象的な概念を説明する。',exCn:'解释抽象的概念。'}],N1:[{word:'懸念',reading:'けねん',pos:'名词/动词',meaning:'担忧，顾虑',example:'健康への懸念が高まる。',exCn:'对健康的担忧加剧。'},{word:'顕著',reading:'けんちょ',pos:'形容词',meaning:'显著',example:'顕著な改善が見られた。',exCn:'可以看到显著的改善。'},{word:'蔓延',reading:'まんえん',pos:'名词/动词',meaning:'蔓延，扩散',example:'感染症が蔓延した。',exCn:'传染病蔓延了。'},{word:'憂慮',reading:'ゆうりょ',pos:'名词/动词',meaning:'忧虑，担忧',example:'将来を憂慮している。',exCn:'对未来感到忧虑。'},{word:'払拭',reading:'ふっしょく',pos:'名词/动词',meaning:'消除，拂去',example:'不安を払拭したい。',exCn:'想消除不安。'},{word:'真摯',reading:'しんし',pos:'形容词',meaning:'真诚，认真',example:'真摯な態度で向き合う。',exCn:'以真诚的态度面对。'},{word:'俯瞰',reading:'ふかん',pos:'名词/动词',meaning:'俯瞰，鸟瞰',example:'全体を俯瞰して考える。',exCn:'从整体俯瞰思考。'},{word:'乖離',reading:'かいり',pos:'名词/动词',meaning:'乖离，背离',example:'理想と現実の乖離がある。',exCn:'理想与现实之间存在乖离。'},{word:'画期的',reading:'かっきてき',pos:'形容词',meaning:'划时代的，革命性的',example:'画期的な発明が生まれた。',exCn:'诞生了划时代的发明。'},{word:'矜持',reading:'きょうじ',pos:'名词',meaning:'自尊，自豪',example:'プロとしての矜持を持つ。',exCn:'拥有作为专业人士的自尊。'},{word:'錯綜',reading:'さくそう',pos:'名词/动词',meaning:'错综，交织',example:'情報が錯綜している。',exCn:'信息交织错杂。'},{word:'饒舌',reading:'じょうぜつ',pos:'名词/形容词',meaning:'饶舌，话多',example:'彼は饒舌な人だ。',exCn:'他是个话多的人。'},{word:'杞憂',reading:'きゆう',pos:'名词',meaning:'杞人忧天，多余的担心',example:'それは杞憂に過ぎない。',exCn:'那不过是杞人忧天。'},{word:'逸脱',reading:'いつだつ',pos:'名词/动词',meaning:'脱离，偏离',example:'規則から逸脱した行動。',exCn:'偏离规则的行为。'},{word:'忍耐',reading:'にんたい',pos:'名词/动词',meaning:'忍耐，耐心',example:'忍耐力が試された。',exCn:'忍耐力受到了考验。'},{word:'瞑想',reading:'めいそう',pos:'名词/动词',meaning:'冥想，沉思',example:'毎朝瞑想する習慣がある。',exCn:'有每天早晨冥想的习惯。'},{word:'歪曲',reading:'わいきょく',pos:'名词/动词',meaning:'歪曲，曲解',example:'事実を歪曲して伝える。',exCn:'歪曲事实进行传达。'},{word:'醸成',reading:'じょうせい',pos:'名词/动词',meaning:'酿成，培育',example:'信頼関係を醸成する。',exCn:'培育信任关系。'},{word:'概括',reading:'がいかつ',pos:'名词/动词',meaning:'概括，总括',example:'内容を概括して説明した。',exCn:'概括地说明了内容。'},{word:'慟哭',reading:'どうこく',pos:'名词/动词',meaning:'恸哭，痛哭',example:'訃報に接して慟哭した。',exCn:'得知噩耗后痛哭失声。'},{word:'逡巡',reading:'しゅんじゅん',pos:'名词/动词',meaning:'踌躇，犹豫',example:'返事をするのに逡巡した。',exCn:'在回答上犹豫了。'},{word:'斟酌',reading:'しんしゃく',pos:'名词/动词',meaning:'斟酌，考量',example:'事情を斟酌して決める。',exCn:'斟酌情况后决定。'},{word:'齟齬',reading:'そご',pos:'名词',meaning:'矛盾，龃龉',example:'両者の間に齟齬が生じた。',exCn:'两者之间产生了矛盾。'},{word:'忌憚',reading:'きたん',pos:'名词',meaning:'顾忌，忌讳',example:'忌憚のない意見を聞かせてください。',exCn:'请告诉我毫无顾虑的意见。'},{word:'蔑視',reading:'べっし',pos:'名词/动词',meaning:'蔑视，轻视',example:'他人を蔑視するのは間違いだ。',exCn:'蔑视他人是错误的。'},{word:'諦観',reading:'たいかん',pos:'名词',meaning:'达观，看透',example:'諦観の境地に達した。',exCn:'达到了达观的境界。'},{word:'恣意',reading:'しい',pos:'名词',meaning:'任意，随意',example:'恣意的な判断は避けるべきだ。',exCn:'应该避免随意的判断。'},{word:'冒涜',reading:'ぼうとく',pos:'名词/动词',meaning:'冒渎，亵渎',example:'神を冒涜する行為。',exCn:'亵渎神灵的行为。'},{word:'醜悪',reading:'しゅうあく',pos:'形容词',meaning:'丑恶',example:'醜悪な行為は許されない。',exCn:'丑恶的行为不被允许。'},{word:'乖戻',reading:'かいれい',pos:'形容词',meaning:'悖谬，乖谬',example:'乖戻な行動が問題になった。',exCn:'悖谬的行为成了问题。'}]};
+
+/* storage */
+function today(){return new Date().toISOString().slice(0,10);}
+function saveJ(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function loadJ(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}}
+function getAllUsers(){return loadJ('jlpt_users')||[];}
+function saveUsers(u){saveJ('jlpt_users',u);}
+function getUD(name){return loadJ('jlpt_u_'+name)||{name,totalDays:0,totalWords:0,streak:0,lastDate:null,days:[]};}
+function saveUD(d){saveJ('jlpt_u_'+d.name,d);}
+
+function refreshStreak(ud){
+  const t=today();
+  if(ud.lastDate===t)return ud;
+  const y=new Date();y.setDate(y.getDate()-1);
+  const ys=y.toISOString().slice(0,10);
+  if(ud.lastDate===ys)ud.streak=(ud.streak||0)+1;
+  else ud.streak=1;
+  return ud;
+}
+function recordSession(ud,words){
+  const t=today();
+  if(ud.lastDate!==t){ud.totalDays=(ud.totalDays||0)+1;ud.days=ud.days||[];if(!ud.days.includes(t))ud.days.push(t);}
+  ud.totalWords=(ud.totalWords||0)+words;
+  ud.lastDate=t;
+  saveUD(ud);
+}
+
+/* state */
+let curUser=null,level=null,dailyCnt=20,queue=[],idx=0,knownCnt=0,reviewQ=[];
+let startX=0,curX=0,dragging=false;
+const fc=document.getElementById('flashcard');
+const ovL=document.getElementById('ov-l'),ovR=document.getElementById('ov-r');
+let quizItems=[],qIdx=0,qOk=0,qFail=0,matchSel=null,matchDone=0,matchRights=[],fillDone=false;
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+/* login init */
+(function(){
+  const inp=document.getElementById('login-input');
+  inp.addEventListener('input',()=>{document.getElementById('login-btn').disabled=!inp.value.trim();});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&inp.value.trim())doLogin();});
+  const users=getAllUsers();
+  if(users.length){
+    document.getElementById('user-list-wrap').style.display='';
+    const list=document.getElementById('user-list');
+    users.slice().reverse().slice(0,5).forEach(n=>{
+      const ud=getUD(n);
+      const d=document.createElement('div');
+      d.className='user-chip';
+      d.innerHTML='<span>'+n+'</span><span class="user-chip-info">🔥 '+(ud.streak||0)+'天连续 · 累计 '+(ud.totalDays||0)+' 天</span>';
+      d.onclick=()=>{inp.value=n;document.getElementById('login-btn').disabled=false;doLogin();};
+      list.appendChild(d);
+    });
+  }
+})();
+
+function doLogin(){
+  const name=document.getElementById('login-input').value.trim();
+  if(!name)return;
+  let ud=getUD(name);ud=refreshStreak(ud);saveUD(ud);
+  const users=getAllUsers();if(!users.includes(name)){users.push(name);saveUsers(users);}
+  curUser=ud;renderSetup();show('s-setup');
+}
+function doLogout(){curUser=null;show('s-login');}
+
+function renderSetup(){
+  const ud=curUser,t=today();
+  document.getElementById('setup-avatar').textContent=ud.name[0].toUpperCase();
+  document.getElementById('setup-uname').textContent=ud.name;
+  document.getElementById('hero-user-line').textContent='欢迎回来，'+ud.name;
+  const d=ud.totalDays||0;
+  document.getElementById('hero-title').textContent='第 '+(d+1)+' 天学习';
+  document.getElementById('hero-sub').textContent=d>0?'已累计学习 '+d+' 天，坚持就是胜利！':'今天是你的第一天，加油！';
+  const s=ud.streak||0;
+  document.getElementById('streak-fire').textContent=s>=7?'🔥':s>=3?'✨':'📅';
+  document.getElementById('streak-day').textContent='连续 '+s+' 天';
+  document.getElementById('streak-sub-txt').textContent=s>=7?'连胜王者！':s>=3?'势头正好！':'保持每日打卡';
+  const cal=document.getElementById('streak-cal');cal.innerHTML='';
+  const days=ud.days||[];
+  for(let i=6;i>=0;i--){const dd=new Date();dd.setDate(dd.getDate()-i);const ds=dd.toISOString().slice(0,10);const dot=document.createElement('div');dot.className='cal-dot'+(days.includes(ds)?' done':'')+(ds===t?' today-dot':'');cal.appendChild(dot);}
+  document.getElementById('h-days').textContent=ud.totalDays||0;
+  document.getElementById('h-words').textContent=ud.totalWords||0;
+  document.getElementById('h-streak').textContent=ud.streak||0;
+}
+
+function selLv(lv){level=lv;['N3','N2','N1'].forEach(l=>document.getElementById('btn-'+l).classList.toggle('active',l===lv));const b=document.getElementById('start-btn');b.disabled=false;b.textContent='开始学习 '+lv+' →';}
+function updCnt(v){dailyCnt=parseInt(v);document.getElementById('cnt-disp').textContent=v;document.getElementById('cnt-v').textContent=v;}
+function goSetup(){renderSetup();show('s-setup');}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;}
+function speak(t){if(!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';u.rate=.9;speechSynthesis.speak(u);}
+
+function startStudy(){queue=shuffle(VOCAB[level]).slice(0,Math.min(dailyCnt,VOCAB[level].length));idx=0;knownCnt=0;reviewQ=[];show('s-study');renderCard();}
+function renderCard(){
+  if(idx>=queue.length){showResult();return;}
+  const it=queue[idx];resetFC();
+  document.getElementById('prog-fill').style.width=Math.round(idx/queue.length*100)+'%';
+  document.getElementById('prog-lbl').textContent=idx+'/'+queue.length;
+  document.getElementById('fc-body').innerHTML='<span class="fc-badge">'+level+'</span><div class="fc-word">'+it.word+'</div><div class="fc-reading">'+it.reading+'</div><button class="fc-snd" onclick="speak(\''+it.word+'\')">♪ 朗读</button><div class="fc-div"></div><div class="fc-pos">'+it.pos+'</div><div class="fc-meaning">'+it.meaning+'</div><div class="fc-ex">'+it.example+'</div><div class="fc-ex-cn">'+it.exCn+'</div>';
+  speak(it.word);
+}
+function resetFC(){fc.style.transform='';fc.style.transition='';ovL.style.opacity='0';ovR.style.opacity='0';}
+function swipe(dir){const it=queue[idx];fc.style.transition='transform .28s ease';fc.style.transform='translateX('+(dir==='right'?500:-500)+'px) rotate('+(dir==='right'?12:-12)+'deg)';if(dir==='left')reviewQ.push(it);else knownCnt++;setTimeout(()=>{idx++;renderCard();},300);}
+fc.addEventListener('mousedown',e=>{dragging=true;startX=e.clientX;fc.style.transition='';});
+window.addEventListener('mousemove',e=>{if(!dragging)return;curX=e.clientX-startX;fc.style.transform='translateX('+curX+'px) rotate('+(curX*.065)+'deg)';const r=Math.min(Math.abs(curX)/80,1);curX<0?(ovL.style.opacity=r,ovR.style.opacity=0):(ovR.style.opacity=r,ovL.style.opacity=0);});
+window.addEventListener('mouseup',()=>{if(!dragging)return;dragging=false;curX>80?swipe('right'):curX<-80?swipe('left'):resetFC();curX=0;});
+fc.addEventListener('touchstart',e=>{dragging=true;startX=e.touches[0].clientX;fc.style.transition='';},{passive:true});
+window.addEventListener('touchmove',e=>{if(!dragging)return;curX=e.touches[0].clientX-startX;fc.style.transform='translateX('+curX+'px) rotate('+(curX*.065)+'deg)';const r=Math.min(Math.abs(curX)/80,1);curX<0?(ovL.style.opacity=r,ovR.style.opacity=0):(ovR.style.opacity=r,ovL.style.opacity=0);},{passive:true});
+window.addEventListener('touchend',()=>{if(!dragging)return;dragging=false;curX>80?swipe('right'):curX<-80?swipe('left'):resetFC();curX=0;});
+
+function showResult(){
+  recordSession(curUser,queue.length);
+  const tot=queue.length,rate=tot?Math.round(knownCnt/tot*100):0;
+  document.getElementById('r-total').textContent=tot;
+  document.getElementById('r-known').textContent=knownCnt;
+  document.getElementById('r-review').textContent=reviewQ.length;
+  document.getElementById('r-rate').textContent=rate+'%';
+  document.getElementById('res-sub').textContent=level+' · 第 '+curUser.totalDays+' 天 · 连续 '+curUser.streak+' 天';
+  document.getElementById('review-btn').style.display=reviewQ.length?'':'none';
+  show('s-result');
+}
+function doReview(){queue=shuffle(reviewQ);reviewQ=[];idx=0;knownCnt=0;show('s-study');renderCard();}
+
+function startQuiz(){quizItems=shuffle([...queue]).slice(0,Math.min(10,queue.length));qIdx=0;qOk=0;qFail=0;show('s-quiz');renderQ();}
+function renderQ(){
+  if(qIdx>=quizItems.length){showFinal();return;}
+  document.getElementById('q-prog').textContent=(qIdx+1)+'/'+quizItems.length;
+  document.getElementById('quiz-next').classList.remove('show');
+  fillDone=false;
+  const types=['mc','mc','match','fill','mc','fill','match','mc','fill','mc'];
+  const t=types[qIdx%types.length];
+  const it=quizItems[qIdx];
+  if(t==='mc')renderMC(it);else if(t==='match')renderMatch();else renderFill(it);
+}
+function setBadge(txt,cls){const b=document.getElementById('q-badge');b.textContent=txt;b.className='qbadge '+cls;}
+function renderMC(it){
+  setBadge('选择题','qb-mc');
+  const wrongs=shuffle(VOCAB[level].filter(x=>x.word!==it.word)).slice(0,3);
+  const opts=shuffle([it,...wrongs]);
+  let h='<div class="quiz-q">下列哪个是 <strong style="font-size:17px;color:var(--text)">'+it.word+'</strong>（'+it.reading+'）的意思？</div><div style="height:10px"></div><div class="mc-opts">';
+  opts.forEach(o=>{h+='<button class="mc-opt" onclick="checkMC(this,\''+o.word+'\',\''+it.word+'\')">'+o.meaning+'</button>';});
+  document.getElementById('quiz-body').innerHTML=h+'</div>';
+}
+function checkMC(btn,chosen,correct){
+  document.querySelectorAll('.mc-opt').forEach(b=>{b.disabled=true;const a=VOCAB[level].find(x=>x.word===correct);if(b.textContent===a.meaning)b.classList.add('reveal');});
+  if(chosen===correct){btn.classList.add('correct');qOk++;}else{btn.classList.add('wrong');qFail++;}
+  document.getElementById('quiz-next').classList.add('show');
+}
+function renderMatch(){
+  setBadge('连线题','qb-match');
+  const pool=shuffle([...quizItems]).slice(0,5);
+  matchRights=shuffle([...pool]);matchSel=null;matchDone=0;
+  let h='<div class="quiz-q" style="margin-bottom:10px">将左边的日语单词与右边的中文意思配对</div><div class="match-grid"><div class="match-col"><div class="match-col-lbl">日语</div>';
+  pool.forEach((it,i)=>{h+='<div class="match-item" id="ml'+i+'" onclick="selMatch(\'l\','+i+',\''+it.word+'\')">'+it.word+'<span class="match-r">'+it.reading+'</span></div>';});
+  h+='</div><div class="match-col"><div class="match-col-lbl">中文</div>';
+  matchRights.forEach((it,i)=>{h+='<div class="match-item" id="mr'+i+'" onclick="selMatch(\'r\','+i+',\''+it.word+'\')">'+it.meaning+'</div>';});
+  document.getElementById('quiz-body').innerHTML=h+'</div></div>';
+  window._mpool=pool;
+}
+function selMatch(side,i,word){
+  const el=document.getElementById((side==='l'?'ml':'mr')+i);
+  if(el.classList.contains('matched-ok')||el.classList.contains('dimmed'))return;
+  if(!matchSel){document.querySelectorAll('.match-item.selected').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');matchSel={side,i,word,el};}
+  else{
+    if(matchSel.side===side){document.querySelectorAll('.match-item.selected').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');matchSel={side,i,word,el};return;}
+    const lWord=matchSel.side==='l'?matchSel.word:word;
+    const rIdx=matchSel.side==='r'?matchSel.i:i;
+    const rWord=matchRights[rIdx].word;
+    const lEl=matchSel.side==='l'?matchSel.el:el;
+    const rEl=matchSel.side==='r'?matchSel.el:el;
+    if(lWord===rWord){lEl.classList.remove('selected');rEl.classList.remove('selected');lEl.classList.add('matched-ok');rEl.classList.add('matched-ok');qOk++;matchDone++;if(matchDone>=window._mpool.length)setTimeout(()=>document.getElementById('quiz-next').classList.add('show'),300);}
+    else{qFail++;lEl.classList.add('matched-err');rEl.classList.add('matched-err');setTimeout(()=>{lEl.classList.remove('matched-err','selected');rEl.classList.remove('matched-err','selected');},650);}
+    matchSel=null;
+  }
+}
+function renderFill(it){
+  setBadge('填写读音','qb-fill');
+  document.getElementById('quiz-body').innerHTML='<div class="quiz-q">请写出下列单词的假名读音（平假名）</div><div class="quiz-word">'+it.word+'</div><div class="fill-row"><input type="text" id="fill-inp" placeholder="输入假名…" autocomplete="off" autocorrect="off" spellcheck="false"><button class="fill-sub" onclick="checkFill(\''+it.reading+'\',\''+it.word+'\')">确认</button></div><div id="fill-fb"></div>';
+  document.getElementById('fill-inp').addEventListener('keydown',e=>{if(e.key==='Enter')checkFill(it.reading,it.word);});
+  setTimeout(()=>document.getElementById('fill-inp').focus(),50);
+}
+function checkFill(correct,word){
+  if(fillDone)return;fillDone=true;
+  const val=(document.getElementById('fill-inp').value||'').trim();
+  const ok=val===correct;if(ok)qOk++;else qFail++;
+  const ans=VOCAB[level].find(x=>x.word===word);
+  document.getElementById('fill-fb').innerHTML='<div class="fill-fb '+(ok?'ok':'err')+'">'+(ok?'✓ 正确！':'✗ 错误。正确读音：'+correct+'　意思：'+ans.meaning)+'</div>';
+  document.getElementById('fill-inp').disabled=true;
+  document.getElementById('quiz-next').classList.add('show');
+}
+function nextQ(){qIdx++;renderQ();}
+function showFinal(){
+  const tot=qOk+qFail,pct=tot?Math.round(qOk/tot*100):0;
+  document.getElementById('f-ok').textContent=qOk;
+  document.getElementById('f-fail').textContent=qFail;
+  document.getElementById('score-pct-txt').textContent=pct+'%';
+  const arc=document.getElementById('score-arc');
+  arc.style.strokeDashoffset=289-(289*pct/100);
+  arc.style.stroke=pct>=80?'var(--green)':pct>=60?'var(--accent)':'var(--red)';
+  document.getElementById('final-icon').textContent=pct>=80?'🏆':pct>=60?'👍':'💪';
+  document.getElementById('final-title').textContent=pct>=80?'太厉害了！':pct>=60?'不错，继续加油！':'再多复习几遍吧';
+  document.getElementById('final-sub').textContent=level+' · 答对 '+qOk+'/'+tot+' 题（正确率 '+pct+'%）';
+  show('s-final');
+}
+</script>
+</body>
+</html>
